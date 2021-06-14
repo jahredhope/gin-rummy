@@ -4,10 +4,6 @@ import { Card, Rank, Suit, rankNames, suitNames, altSuitNames, getCardName } fro
 
 const USE_CRYPTO = false;
 
-// function sortBySuit(arr: Card[]) {
-//   return arr.sort((a, b) => a[0] + 13 * a[1] - (b[0] + 13 * b[1]));
-// }
-
 export function sortByRank(arr: Card[]) {
   return arr.sort((a, b) => a[1] + 4 * a[0] - (b[1] + 4 * b[0]));
 }

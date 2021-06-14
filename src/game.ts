@@ -1,249 +1,118 @@
-import { trace } from "./log";
-import { Card, getCardName } from "./cards";
-import { sortByRank, getMelds, getScore, drawHands, getShuffledDeck, printDeck, getSequences, getSets } from "./decks";
+import { Card } from "./cards";
+import { Hand } from "./hand";
+import { drawHands, getShuffledDeck } from "./decks";
+import { Action, DiscardAction, DrawAction, TurnState } from "./action";
+import { otherPlayer, PlayerIndex, PlayerOne, PlayerTwo, expect } from "./utils";
 
-export function takeTurn(hand: Card[], deck: Card[], discard: Card[]) {
-  trace("Old Hand", printDeck(hand));
-  const newCard = deck.pop()!;
-  hand.push(newCard);
-
-  const afterDraw = getMelds(hand);
-  if (afterDraw.unmatched.length === 0) {
-    return "gin";
-  }
-  const removed = hand.splice(hand.indexOf(afterDraw.unmatched[0]), 1);
-  discard.push(...removed);
-
-  trace("Draw", getCardName(newCard), " => ", "Discard", getCardName(removed[0]));
-
-  trace("New Hand", printDeck(hand));
-
-  const afterDiscard = getMelds(hand);
-  if (getScore(afterDiscard.unmatched) <= 10) {
-    trace("Unmatched score", getScore(afterDiscard.unmatched), "with", printDeck(afterDiscard.unmatched));
-    return "knock";
-  }
-  return undefined;
-}
-
-function printAll(name: string, arr: Card[]) {
-  trace(name, `(${arr.length})`);
-  trace("Hand  ", sortByRank(arr).map(getCardName).join(" "));
-  const { sets, sequences, unmatched } = getMelds(arr);
-  if (sets.length) {
-    trace("Sets", sets.map((s) => s.map(getCardName).join(" ")).join(" | "));
-  } else {
-    ("No Sets");
-  }
-  if (sequences.length) {
-    trace("Sequences", sequences.map((s) => s.map(getCardName).join(" ")).join(" | "));
-  } else {
-    ("No Sequences");
-  }
-  trace("Unmatched", unmatched.map(getCardName).join(" "));
-  trace("Score", getScore(unmatched));
-  return getScore(unmatched);
-}
-
-export function playGame(deck?: Card[], playerCount = 2, handSize = 10) {
-  deck ||= getShuffledDeck();
-  const discard: Card[] = [];
-  trace("Dealing...");
-  const [handOne, handTwo] = drawHands(deck, handSize, playerCount);
-  for (let i = 0; i < 1000; i++) {
-    if (deck.length < 1) {
-      trace("Deck runs out");
-      break;
-    }
-    trace("\n --- Turn: Player 1 ---");
-    if (takeTurn(handOne, deck, discard)) {
-      trace("Player 1 knocks");
-      break;
-    }
-    trace("\n --- Turn: Player 2 ---");
-    if (takeTurn(handTwo, deck, discard)) {
-      trace("Player 2 knocks");
-      break;
-    }
-    if (i > 100) {
-      trace("Ending game manually");
-      break;
-    }
-  }
-
-  trace("\n----- ----- -----\n");
-
-  const PlayerOneScore = printAll("Player One", handOne);
-
-  trace("\n----- ----- -----\n");
-
-  const PlayerTwoScore = printAll("Player Two", handTwo);
-
-  trace("\n----- ----- -----\n");
-
-  if (PlayerOneScore > PlayerTwoScore) {
-    trace("Player One Wins!!!");
-    return 1;
-  } else if (PlayerTwoScore > PlayerOneScore) {
-    trace("Player Two Wins!!!");
-    return -1;
-  } else {
-    trace("It's a draw!!!");
-    return 0;
-  }
-}
-type HandState = "in-progress" | "knock" | "gin";
-export class Hand {
-  constructor(name: string, cards: Card[]) {
-    this.name = name;
-    this._cards = cards;
-  }
-  public name: string;
-  public state: HandState = "in-progress";
-  public lastDraw: Card | null = null;
-  public lastDiscard: Card | null = null;
-  private _cards: Card[];
-  private _sets: Card[][] | null = null;
-  private _sequences: Card[][] | null = null;
-  private _score: number | null = null;
-  private _deadwood: Card[] | null = null;
-  get cards() {
-    return this._cards;
-  }
-  addCard(card: Card) {
-    this.clearCache();
-    this.lastDraw = card;
-    this._cards.push(card);
-  }
-  discard(index: number) {
-    this.clearCache();
-    const toDiscard = this._cards.splice(index, 1)[0];
-    this.lastDiscard = toDiscard;
-    return toDiscard;
-  }
-  private clearCache() {
-    this._sets = null;
-    this._sequences = null;
-    this._deadwood = null;
-    this._score = null;
-  }
-  private get sets() {
-    if (this._sets === null) {
-      this._sets = getSets(this.cards);
-    }
-    return this._sets;
-  }
-  private get sequences() {
-    if (this._sequences === null) {
-      this._sequences = getSequences(this.cards);
-    }
-    return this._sequences;
-  }
-  get melds() {
-    return [...this.sets, ...this.sequences];
-  }
-  get deadwood() {
-    if (this._deadwood === null) {
-      this._deadwood = this.cards.filter((c) => !this.melds.some((s) => s.includes(c)));
-    }
-    return this._deadwood;
-  }
-  get score() {
-    if (this._score === null) {
-      this._score = getScore(this.deadwood);
-    }
-    return this._score;
-  }
-}
-
-interface TurnLogEntry {
-  turn: number;
-  player: string;
-  discarded: Card;
-  drew: Card;
-}
 export class Game {
   constructor() {
     this.deck = getShuffledDeck();
     this.discardPile = [this.deck.pop()!];
     const [handOne, handTwo] = drawHands(this.deck);
     this.hands = [new Hand("Player One", handOne), new Hand("Player Two", handTwo)];
-    this.nextTurn = Math.random() > 0.5 ? Players.PlayerOne : Players.PlayerTwo;
+    this.nextTurn = Math.random() > 0.5 ? PlayerOne : PlayerTwo;
   }
-  public turnCount = 0;
-  public turns: TurnLogEntry[] = [];
-  private nextTurn: Players.PlayerOne | Players.PlayerTwo;
+  public turnCount = 1;
+  public turns: Action[] = [];
+  nextTurn: PlayerIndex;
+  nextAction: "draw" | "discard" = "draw";
+  private stockAllowed = false;
   hands: [Hand, Hand];
   deck: Card[];
   discardPile: Card[];
-  takeAITurn() {
-    const hand = this.hands[this.nextTurn];
-    let newCard: Card | undefined;
-    if (Math.random() > 0.3) {
-      newCard = this.deck.pop();
-    } else {
-      newCard = this.discardPile.pop();
-    }
-    if (!newCard) {
-      return "game-over";
-    }
-    hand.addCard(newCard);
-
-    if (hand.deadwood.length === 0) {
-      hand.state = "gin";
-      return "gin";
-    }
-    const toDiscard = hand.deadwood[hand.deadwood.length - 1];
-    const removed = hand.discard(hand.cards.indexOf(toDiscard));
-    this.discardPile.push(removed);
-
-    if (getScore(hand.deadwood) <= 10) {
-      hand.state = "knock";
-      return "knock";
-    }
-
-    return undefined;
-  }
-  takeTurn() {
-    const result = this.takeAITurn();
-
-    this.turnCount++;
-    const hand = this.hands[this.nextTurn];
-    this.turns.push({
-      turn: this.turnCount,
-      player: hand.name,
-      discarded: hand.lastDiscard!,
-      drew: hand.lastDraw!,
-    });
-    this.nextTurn = this.nextTurn === Players.PlayerOne ? Players.PlayerTwo : Players.PlayerOne;
-    return result;
-  }
-  get lastTurn() {
-    if (this.turns.length === 0) {
-      return null;
-    }
-    return this.turns[this.turns.length - 1];
-  }
-  get gameState(): { result: HandState; winner?: string; points?: number } {
-    for (let playerIndex = 0; playerIndex < 2; playerIndex++) {
-      if (this.hands[playerIndex].state === "gin" || this.hands[playerIndex].state === "knock") {
-        return {
-          result: this.hands[playerIndex].state,
-          winner: this.hands[playerIndex].name,
-          points:
-            this.hands[playerIndex === 0 ? 1 : 0].score -
-            this.hands[playerIndex].score +
-            (this.hands[playerIndex].state === "gin" ? 20 : 0),
-        };
-      }
-    }
+  outcome?: {
+    winner: PlayerIndex;
+    points: number;
+  };
+  getNextTurnState(): TurnState {
     return {
-      result: "in-progress",
+      awaiting: this.nextAction,
+      turn: this.turnCount,
+      player: this.nextTurn,
+      hand: [...this.hands[this.nextTurn].cards],
+      discard: this.discardPile,
+      stockAllowed: this.stockAllowed,
+      stockSize: this.deck.length,
     };
   }
-}
+  handleAction(turn: Action) {
+    if (this.outcome) {
+      throw new Error("Attempted to take a turn after game has ended");
+    }
+    this.turns.push(turn);
+    if (turn.type === "discard") {
+      this.handleDiscardAction(turn);
+    }
+    if (turn.type === "draw") {
+      this.handleDrawAction(turn);
+    }
+  }
+  private handleDrawAction(turn: DrawAction) {
+    expect("Turn count", turn.turn, this.turnCount);
+    expect("Turn player", turn.player, this.nextTurn);
+    let newCard: Card | undefined;
+    if (turn.from === "pass") {
+      this.handleEndTurn();
+      return;
+    }
+    this.stockAllowed = true;
+    if (turn.from === "stock") {
+      newCard = this.deck.pop();
+    } else if (turn.from === "discard") {
+      newCard = this.discardPile.pop();
+    }
+    this.hands[turn.player].addCard(newCard!);
+    this.nextAction = "discard";
+  }
+  private handleDiscardAction(turn: DiscardAction) {
+    expect("Turn count", turn.turn, this.turnCount);
+    expect("Turn player", turn.player, this.nextTurn);
+    const hand = this.hands[turn.player];
+    const indexToDiscard = hand.cards.indexOf(turn.card);
+    if (indexToDiscard === -1) {
+      throw new Error(`Attempted to discard a card not in hand. Card ${turn.card}`);
+    }
+    const discardedCard = hand.discard(indexToDiscard);
+    this.discardPile.push(discardedCard);
+    if (turn.knock) {
+      if (this.hands[turn.player].score > 10) {
+        throw new Error(`Attempted to knock with score greater than 10. Score ${this.hands[turn.player].score}`);
+      }
+      this.handleKnock(turn);
+    }
+    this.handleEndTurn();
+  }
+  handleEndTurn() {
+    this.turnCount++;
+    this.nextTurn = otherPlayer(this.nextTurn);
+    this.nextAction = "draw";
+  }
+  handleKnock(turn: DiscardAction) {
+    let player1Score = this.hands[0].score;
+    let player2Score = this.hands[1].score;
 
-export enum Players {
-  PlayerOne,
-  PlayerTwo,
+    let undercut = false;
+
+    // Score difference
+    // Negative: Player one had a lower score
+    // Positive: Player two had a lower score
+    const scoreDifference = player1Score - player2Score;
+    let score = Math.abs(scoreDifference);
+    if (this.hands[turn.player].score === 0) {
+      // Gin
+      score += 20;
+    } else if (
+      scoreDifference === 0 ||
+      (scoreDifference > 0 && turn.player === PlayerOne) ||
+      (scoreDifference < 0 && turn.player === PlayerTwo)
+    ) {
+      // Undercut
+      undercut = true;
+      score += 10;
+    }
+    this.outcome = {
+      winner: undercut ? otherPlayer(turn.player) : turn.player,
+      points: score,
+    };
+  }
 }
