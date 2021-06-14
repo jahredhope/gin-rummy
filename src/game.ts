@@ -9,7 +9,7 @@ export class Game {
     this.deck = getShuffledDeck();
     this.discardPile = [this.deck.pop()!];
     const [handOne, handTwo] = drawHands(this.deck);
-    this.hands = [new Hand("Player One", handOne), new Hand("Player Two", handTwo)];
+    this.hands = [new Hand(handOne), new Hand(handTwo)];
     this.nextTurn = Math.random() > 0.5 ? PlayerOne : PlayerTwo;
   }
   public turnCount = 1;

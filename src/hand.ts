@@ -2,11 +2,9 @@ import { Card } from "./cards";
 import { getSets, getSequences, getScore } from "./decks";
 
 export class Hand {
-  constructor(name: string, cards: Card[]) {
-    this.name = name;
+  constructor(cards: Card[]) {
     this._cards = cards;
   }
-  public name: string;
   public lastDraw: Card | null = null;
   public lastDiscard: Card | null = null;
   private _cards: Card[];
