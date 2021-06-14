@@ -3,15 +3,17 @@ import { Box, Text } from "ink";
 import { Action } from "../action";
 import { CardComponent } from "./Card";
 import { Player } from "./Player";
+import { useGame } from "./context";
 
 const LOG_LENGTH = 4;
 
-export function Log({ turns }: { turns: Action[] }) {
+export function LogSection() {
+  const { game } = useGame();
   return (
     <Box borderStyle="round" minHeight={LOG_LENGTH + 3} flexDirection="column">
       <Text>Log</Text>
-      {turns.length !== 0
-        ? turns
+      {game.turns.length !== 0
+        ? game.turns
             .slice(-LOG_LENGTH)
             .map((turn, i) => (
               <LogEntry

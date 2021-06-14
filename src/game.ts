@@ -1,6 +1,6 @@
 import { Card } from "./cards";
 import { Hand } from "./hand";
-import { drawHands, getShuffledDeck } from "./decks";
+import { drawHands, getScore, getShuffledDeck } from "./decks";
 import { Action, DiscardAction, DrawAction, TurnState } from "./action";
 import {
   otherPlayer,
@@ -22,13 +22,15 @@ export class Game {
   public turns: Action[] = [];
   nextTurn: PlayerIndex;
   nextAction: "draw" | "discard" = "draw";
-  private stockAllowed = false;
+  stockAllowed = false;
   hands: [Hand, Hand];
   deck: Card[];
   discardPile: Card[];
   outcome?: {
     winner: PlayerIndex;
     points: number;
+    gin: boolean;
+    undercut: boolean;
   };
   getNextTurnState(): TurnState {
     return {
@@ -113,9 +115,11 @@ export class Game {
     // Negative: Player one had a lower score
     // Positive: Player two had a lower score
     const scoreDifference = player1Score - player2Score;
+    let gin = false;
     let score = Math.abs(scoreDifference);
     if (this.hands[turn.player].score === 0) {
       // Gin
+      gin = true;
       score += 20;
     } else if (
       scoreDifference === 0 ||
@@ -129,6 +133,8 @@ export class Game {
     this.outcome = {
       winner: undercut ? otherPlayer(turn.player) : turn.player,
       points: score,
+      gin,
+      undercut,
     };
   }
 }
