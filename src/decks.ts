@@ -1,6 +1,14 @@
 import { randomInt } from "crypto";
 
-import { Card, Rank, Suit, rankNames, suitNames, altSuitNames, getCardName } from "./cards";
+import {
+  Card,
+  Rank,
+  Suit,
+  rankNames,
+  suitNames,
+  altSuitNames,
+  getCardName,
+} from "./cards";
 
 const USE_CRYPTO = false;
 
@@ -10,7 +18,9 @@ export function sortByRank(arr: Card[]) {
 
 export function shuffleDeck(arr: Card[]) {
   for (let i = 0; i < arr.length; i++) {
-    const j = USE_CRYPTO ? randomInt(arr.length) : Math.floor(Math.random() * arr.length);
+    const j = USE_CRYPTO
+      ? randomInt(arr.length)
+      : Math.floor(Math.random() * arr.length);
     const temp = arr[i];
     arr[i] = arr[j];
     arr[j] = temp;
@@ -35,7 +45,10 @@ export function printDeck(deck: Card[]) {
 
 export function getDeckFromString(str: string): Card[] {
   const result = str.split(/[ ,]+/).map((n) => {
-    return [rankNames.indexOf(n.slice(0, -1)), -1 * suitNames.indexOf(n.slice(-1)) * altSuitNames.indexOf(n.slice(-1))];
+    return [
+      rankNames.indexOf(n.slice(0, -1)),
+      -1 * suitNames.indexOf(n.slice(-1)) * altSuitNames.indexOf(n.slice(-1)),
+    ];
   }) as Card[];
   return result;
 }
@@ -48,7 +61,11 @@ export function getShuffledDeck() {
   return deck;
 }
 
-export function drawHands(deck: Card[], handSize: number = 10, handCount: number = 2) {
+export function drawHands(
+  deck: Card[],
+  handSize: number = 10,
+  handCount: number = 2
+) {
   const hands: Card[][] = [];
   for (let h = 0; h < handCount; h++) {
     hands.push([]);
@@ -123,7 +140,11 @@ export function getMelds(hand: Card[]) {
   return {
     sets,
     sequences,
-    unmatched: hand.filter((c) => !sets.some((s) => s.includes(c)) && !sequences.some((s) => s.includes(c))),
+    unmatched: hand.filter(
+      (c) =>
+        !sets.some((s) => s.includes(c)) &&
+        !sequences.some((s) => s.includes(c))
+    ),
   };
 }
 

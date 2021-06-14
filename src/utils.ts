@@ -1,6 +1,8 @@
 export function expect<T>(name: string, actual: T, expected: T) {
   if (actual !== expected) {
-    throw new Error(`${name} does not match. Expected ${expected}. Received ${actual}`);
+    throw new Error(
+      `${name} does not match. Expected ${expected}. Received ${actual}`
+    );
   }
 }
 export function otherPlayer(player: PlayerIndex): PlayerIndex {

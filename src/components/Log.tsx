@@ -11,7 +11,14 @@ export function Log({ turns }: { turns: Action[] }) {
     <Box borderStyle="round" minHeight={LOG_LENGTH + 3} flexDirection="column">
       <Text>Log</Text>
       {turns.length !== 0
-        ? turns.slice(-LOG_LENGTH).map((turn, i) => <LogEntry key={`action-${turn.turn}-${turn.type}`} action={turn} />)
+        ? turns
+            .slice(-LOG_LENGTH)
+            .map((turn, i) => (
+              <LogEntry
+                key={`action-${turn.turn}-${turn.type}`}
+                action={turn}
+              />
+            ))
         : null}
     </Box>
   );
@@ -27,7 +34,8 @@ function LogEntry({ action }: { action: Action }) {
   }
   return (
     <Text>
-      <Player playerIndex={action.player} /> discarded <CardComponent card={action.card} />
+      <Player playerIndex={action.player} /> discarded{" "}
+      <CardComponent card={action.card} />
       {action.knock ? ` and knocked` : ""}
     </Text>
   );

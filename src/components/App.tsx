@@ -54,27 +54,32 @@ export const App = () => {
   return (
     <Box flexDirection="column">
       <Box justifyContent="space-between">
-        <Text>{gameRef.current.outcome ? "Game over" : `Turn ${gameRef.current.turnCount}`}</Text>
+        <Text>
+          {gameRef.current.outcome
+            ? "Game over"
+            : `Turn ${gameRef.current.turnCount}`}
+        </Text>
         <Text>({gameRef.current.deck.length} cards left)</Text>
       </Box>
       <Box justifyContent="space-between">
         <Text>
           Current player: <Player playerIndex={gameRef.current.nextTurn} />
         </Text>
-        <Text>Waiting for: {gameRef.current.nextAction === "draw" ? "Draw" : "Discard"}</Text>
+        <Text>
+          Waiting for:{" "}
+          {gameRef.current.nextAction === "draw" ? "Draw" : "Discard"}
+        </Text>
       </Box>
       <Box flexDirection="row" width="100%">
         <HandComponent
           hand={gameRef.current.hands[0]}
           playerIndex={0}
           hidden={false}
-          showMelds={Boolean(gameRef.current.outcome)}
         />
         <HandComponent
           hand={gameRef.current.hands[1]}
           playerIndex={1}
           hidden={gameRef.current.outcome ? false : true}
-          showMelds={Boolean(gameRef.current.outcome)}
         />
       </Box>
       <Box borderStyle="round">
@@ -92,10 +97,15 @@ export const App = () => {
       <Log turns={gameRef.current.turns} />
       {gameRef.current.outcome ? (
         <Text>
-          <Player playerIndex={gameRef.current.outcome.winner} /> wins with {gameRef.current.outcome.points} points!!!
+          <Player playerIndex={gameRef.current.outcome.winner} /> wins with{" "}
+          {gameRef.current.outcome.points} points!!!
         </Text>
       ) : null}
-      {gameRef.current.outcome ? <Text>Start again (y/N)?</Text> : <TurnPrompt game={gameRef.current} />}
+      {gameRef.current.outcome ? (
+        <Text>Start again (y/N)?</Text>
+      ) : (
+        <TurnPrompt game={gameRef.current} />
+      )}
     </Box>
   );
 };

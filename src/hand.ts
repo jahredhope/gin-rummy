@@ -49,7 +49,9 @@ export class Hand {
   }
   get deadwood() {
     if (this._deadwood === null) {
-      this._deadwood = this.cards.filter((c) => !this.melds.some((s) => s.includes(c)));
+      this._deadwood = this.cards.filter(
+        (c) => !this.melds.some((s) => s.includes(c))
+      );
     }
     return this._deadwood;
   }

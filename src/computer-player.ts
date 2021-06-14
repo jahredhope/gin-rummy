@@ -10,7 +10,10 @@ export function takeDrawTurn(state: TurnState): DrawAction {
   hand.addCard(getLast(state.discard));
   hand.discard(hand.deadwood.length - 1);
   const scoreWithDiscard = hand.score;
-  const from = state.stockAllowed && scoreWithout <= scoreWithDiscard ? "stock" : "discard";
+  const from =
+    state.stockAllowed && scoreWithout <= scoreWithDiscard
+      ? "stock"
+      : "discard";
   const action: DrawAction = {
     type: "draw",
     from,

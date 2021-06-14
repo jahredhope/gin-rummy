@@ -2,7 +2,13 @@ import { Card } from "./cards";
 import { Hand } from "./hand";
 import { drawHands, getShuffledDeck } from "./decks";
 import { Action, DiscardAction, DrawAction, TurnState } from "./action";
-import { otherPlayer, PlayerIndex, PlayerOne, PlayerTwo, expect } from "./utils";
+import {
+  otherPlayer,
+  PlayerIndex,
+  PlayerOne,
+  PlayerTwo,
+  expect,
+} from "./utils";
 
 export class Game {
   constructor() {
@@ -36,24 +42,30 @@ export class Game {
     };
   }
   handleAction(turn: Action) {
+    expect("Turn count", turn.turn, this.turnCount);
+    expect("Turn player", turn.player, this.nextTurn);
     if (this.outcome) {
       throw new Error("Attempted to take a turn after game has ended");
     }
-    this.turns.push(turn);
     if (turn.type === "discard") {
       this.handleDiscardAction(turn);
     }
     if (turn.type === "draw") {
       this.handleDrawAction(turn);
     }
+    this.turns.push(turn);
   }
   private handleDrawAction(turn: DrawAction) {
-    expect("Turn count", turn.turn, this.turnCount);
-    expect("Turn player", turn.player, this.nextTurn);
     let newCard: Card | undefined;
     if (turn.from === "pass") {
+      if (this.turnCount > 2) {
+        this.stockAllowed = true;
+      }
       this.handleEndTurn();
       return;
+    }
+    if (turn.from === "stock" && !this.stockAllowed) {
+      throw new Error("Attempted to pickup from stock before initial discard");
     }
     this.stockAllowed = true;
     if (turn.from === "stock") {
@@ -65,18 +77,22 @@ export class Game {
     this.nextAction = "discard";
   }
   private handleDiscardAction(turn: DiscardAction) {
-    expect("Turn count", turn.turn, this.turnCount);
-    expect("Turn player", turn.player, this.nextTurn);
     const hand = this.hands[turn.player];
     const indexToDiscard = hand.cards.indexOf(turn.card);
     if (indexToDiscard === -1) {
-      throw new Error(`Attempted to discard a card not in hand. Card ${turn.card}`);
+      throw new Error(
+        `Attempted to discard a card not in hand. Card ${turn.card}`
+      );
     }
     const discardedCard = hand.discard(indexToDiscard);
     this.discardPile.push(discardedCard);
     if (turn.knock) {
       if (this.hands[turn.player].score > 10) {
-        throw new Error(`Attempted to knock with score greater than 10. Score ${this.hands[turn.player].score}`);
+        throw new Error(
+          `Attempted to knock with score greater than 10. Score ${
+            this.hands[turn.player].score
+          }`
+        );
       }
       this.handleKnock(turn);
     }

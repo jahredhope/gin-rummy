@@ -5,7 +5,14 @@ export function humanInput(game: Game, input: string, key: Key) {
   try {
     const turnState = game.getNextTurnState();
     if (turnState.awaiting === "draw") {
-      const drawFrom = input === "1" ? "stock" : input === "2" ? "discard" : input === "3" ? "pass" : null;
+      const drawFrom =
+        input === "1"
+          ? "stock"
+          : input === "2"
+          ? "discard"
+          : input === "3"
+          ? "pass"
+          : null;
       if (!drawFrom) {
         return;
       }
@@ -33,6 +40,6 @@ export function humanInput(game: Game, input: string, key: Key) {
       });
     }
   } catch (error) {
-    console.error("Invalid input", error);
+    console.error("Invalid input:", error.message);
   }
 }
