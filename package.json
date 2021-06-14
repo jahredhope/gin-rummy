@@ -1,16 +1,17 @@
 {
   "name": "gin-rummy",
-  "version": "0.0.1",
+  "version": "0.0.6",
   "main": "index.js",
   "license": "MIT",
   "bin": {
-    "gin-rummy": "./dist/index.ts"
+    "gin-rummy": "./dist/index.js"
   },
   "scripts": {
     "start": "ts-node-dev --respawn src/index.tsx",
     "build": "tsc -p tsconfig.json --outDir dist",
     "lint": "prettier --check .",
     "format": "prettier --write .",
+    "prepublishOnly": "npm run build",
     "test": "jest"
   },
   "dependencies": {
