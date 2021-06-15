@@ -84,11 +84,11 @@ export function InputSection({ forceRender }: { forceRender: () => void }) {
           const turnState = game.getNextTurnState();
           if (turnState.awaiting === "draw") {
             const drawFrom =
-              input === "1" || key.leftArrow
+              game.stockAllowed && input === "s"
                 ? "stock"
-                : input === "2" || key.rightArrow
+                : input === "d"
                 ? "discard"
-                : input === "3" || key.downArrow
+                : input === "p"
                 ? "pass"
                 : null;
             if (!confirming || !selectedAction) {
@@ -179,7 +179,7 @@ export function InputSection({ forceRender }: { forceRender: () => void }) {
   if (game.nextAction === "draw") {
     return (
       <>
-        <Text>Your turn. Draw a card. Use arrow keys to select.</Text>
+        <Text>Your turn. Draw a card.</Text>
         {confirming ? (
           <Text>
             Are you sure you want to{" "}
@@ -190,7 +190,8 @@ export function InputSection({ forceRender }: { forceRender: () => void }) {
           </Text>
         ) : (
           <Text>
-            Draw from{game.stockAllowed ? " (←)Stock" : ""} (→)Discard (↓)Pass
+            Draw from the{game.stockAllowed ? " (s)tock pile" : ""}, (d)iscard
+            pile, or (p)ass
           </Text>
         )}
       </>
@@ -206,7 +207,7 @@ export function InputSection({ forceRender }: { forceRender: () => void }) {
         {promptForKnocking}
         {confirming && selectedCard != null ? (
           <Text>
-            Are you sure you want to discard{" "}
+            Are you sure you want to discard
             <CardComponent card={selectedCard} />? (Press Enter to confirm. Any
             other key to return)
           </Text>

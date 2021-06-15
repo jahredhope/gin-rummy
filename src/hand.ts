@@ -1,5 +1,5 @@
 import { Card } from "./cards";
-import { getSets, getSequences, getScore } from "./decks";
+import { getSets, getSequences, getScore, getAllMelds } from "./decks";
 
 export class Hand {
   constructor(cards: Card[]) {
@@ -8,8 +8,7 @@ export class Hand {
   public lastDraw: Card | null = null;
   public lastDiscard: Card | null = null;
   private _cards: Card[];
-  private _sets: Card[][] | null = null;
-  private _sequences: Card[][] | null = null;
+  private _melds: Card[][] | null = null;
   private _score: number | null = null;
   private _deadwood: Card[] | null = null;
   get cards() {
@@ -27,25 +26,15 @@ export class Hand {
     return toDiscard;
   }
   private clearCache() {
-    this._sets = null;
-    this._sequences = null;
+    this._melds = null;
     this._deadwood = null;
     this._score = null;
   }
-  private get sets() {
-    if (this._sets === null) {
-      this._sets = getSets(this.cards);
+  get melds(): Card[][] {
+    if (this._melds === null) {
+      this._melds = getAllMelds(this.cards);
     }
-    return this._sets;
-  }
-  private get sequences() {
-    if (this._sequences === null) {
-      this._sequences = getSequences(this.cards);
-    }
-    return this._sequences;
-  }
-  get melds() {
-    return [...this.sets, ...this.sequences];
+    return this._melds;
   }
   get deadwood() {
     if (this._deadwood === null) {

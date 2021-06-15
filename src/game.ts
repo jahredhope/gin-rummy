@@ -51,20 +51,25 @@ export class Game {
     }
     if (turn.type === "discard") {
       this.handleDiscardAction(turn);
+      this.turns.push(turn);
     }
     if (turn.type === "draw") {
-      this.handleDrawAction(turn);
+      const card = this.handleDrawAction(turn);
+      if (card) {
+        this.turns.push({ ...turn, card });
+      } else {
+        this.turns.push(turn);
+      }
     }
-    this.turns.push(turn);
   }
-  private handleDrawAction(turn: DrawAction) {
+  private handleDrawAction(turn: DrawAction): Card | null {
     let newCard: Card | undefined;
     if (turn.from === "pass") {
-      if (this.turnCount > 2) {
+      if (!this.stockAllowed && this.turnCount >= 2) {
         this.stockAllowed = true;
       }
       this.handleEndTurn();
-      return;
+      return null;
     }
     if (turn.from === "stock" && !this.stockAllowed) {
       throw new Error("Attempted to pickup from stock before initial discard");
@@ -77,6 +82,7 @@ export class Game {
     }
     this.hands[turn.player].addCard(newCard!);
     this.nextAction = "discard";
+    return newCard!;
   }
   private handleDiscardAction(turn: DiscardAction) {
     const hand = this.hands[turn.player];

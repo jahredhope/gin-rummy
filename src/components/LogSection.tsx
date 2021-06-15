@@ -3,7 +3,7 @@ import { Box, Text } from "ink";
 import { Action } from "../action";
 import { CardComponent } from "./Card";
 import { Player } from "./Player";
-import { useGame } from "./context";
+import { useConfig, useGame } from "./context";
 
 const LOG_LENGTH = 4;
 
@@ -27,10 +27,20 @@ export function LogSection() {
 }
 
 function LogEntry({ action }: { action: Action }) {
+  const { cheatMode } = useConfig();
   if (action.type === "draw") {
+    if (action.from === "pass") {
+      return (
+        <Text>
+          <Player playerIndex={action.player} /> passed
+        </Text>
+      );
+    }
     return (
       <Text>
-        <Player playerIndex={action.player} /> drew from the {action.from} pile.
+        <Player playerIndex={action.player} /> drew
+        {action.card && cheatMode ? <CardComponent card={action.card} /> : " "}
+        from the {action.from} pile.
       </Text>
     );
   }

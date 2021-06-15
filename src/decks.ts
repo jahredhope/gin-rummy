@@ -8,6 +8,7 @@ import {
   suitNames,
   altSuitNames,
   getCardName,
+  getSuitName,
 } from "./cards";
 
 const USE_CRYPTO = false;
@@ -44,12 +45,15 @@ export function printDeck(deck: Card[]) {
 }
 
 export function getDeckFromString(str: string): Card[] {
-  const result = str.split(/[ ,]+/).map((n) => {
-    return [
-      rankNames.indexOf(n.slice(0, -1)),
-      -1 * suitNames.indexOf(n.slice(-1)) * altSuitNames.indexOf(n.slice(-1)),
-    ];
-  }) as Card[];
+  const result = str
+    .trim()
+    .split(/[\s,]+/)
+    .map((n) => {
+      return [
+        rankNames.indexOf(n.slice(0, -1)),
+        -1 * suitNames.indexOf(n.slice(-1)) * altSuitNames.indexOf(n.slice(-1)),
+      ];
+    }) as Card[];
   return result;
 }
 
@@ -94,9 +98,13 @@ export function getSequences(hand: Card[]) {
 
   for (let s = 0; s < 4; s++) {
     const cards = bySuits[s];
+    if (cards.length === 0) {
+      // No cards in suit
+      continue;
+    }
     const minForMeld = 3;
     let count = 1;
-    let lastValue = byRank[0][0];
+    let lastValue = cards[0][0];
     for (let i = 1; i <= cards.length; i++) {
       if (cards[i] && cards[i][0] === lastValue + 1) {
         count++;
@@ -146,6 +154,68 @@ export function getMelds(hand: Card[]) {
         !sequences.some((s) => s.includes(c))
     ),
   };
+}
+
+function hasConflictingItems<T>(a: T[], b: T[]) {
+  for (let aItem of a) {
+    for (let bItem of b) {
+      if (aItem === bItem) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+// /**
+//  * Finds all possible combinations array of arrays after removing conflicting items
+//  * @param arr Array of arrays of items
+//  */
+// function getCombinationsOfExclusionaryArrays<T>(
+//   aListofLists: T[][],
+//   bListofLists: T[][]
+// ): T[][][] {
+//   for (let aList of aListofLists) {
+//   }
+//   return [arr];
+// }
+
+export function getAllMelds(cards: Card[]) {
+  const sets = getSets(cards);
+  const runs = getSequences(cards);
+  const melds: Card[][] = [...sets, ...runs];
+  let combinations: Card[][][] = [melds];
+  function split(melds: Card[][], set: Card[], run: Card[]) {
+    return [
+      melds.filter((meld) => meld !== set),
+      melds.filter((meld) => meld !== run),
+    ];
+  }
+  for (let run of runs) {
+    for (let set of sets) {
+      const isConflicting = hasConflictingItems(run, set);
+      if (isConflicting) {
+        combinations = combinations
+          .map((melds) => split(melds, set, run))
+          .flat(1);
+      }
+    }
+  }
+  const highestScoreMelds = combinations.reduce((a, b) => {
+    if (getScore(b.flat(1)) > getScore(a.flat(1))) {
+      return b;
+    }
+    return a;
+  });
+  // if (combinations.length > 1) {
+  //   console.log({
+  //     sets: sets.map(printDeck),
+  //     runs: runs.map(printDeck),
+  //     highestScoreMelds: highestScoreMelds.map(printDeck),
+  //     combinations: combinations.map((comb) => comb.map(printDeck)),
+  //   });
+  // }
+  return highestScoreMelds;
 }
 
 export function getScore(cards: Card[]) {

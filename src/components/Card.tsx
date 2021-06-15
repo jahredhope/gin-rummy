@@ -3,7 +3,7 @@ import { Box, Text, useFocus, useInput } from "ink";
 import { Card, getCardName } from "../cards";
 import { Hand } from "../hand";
 import { Player } from "./Player";
-import { useCardSelection } from "./context";
+import { useCardSelection, useGame } from "./context";
 
 export const CardComponent = ({
   card,
@@ -25,18 +25,25 @@ export const CardComponent = ({
         card[1] > 1
           ? isFocused
             ? "#ff0000"
-            : "red"
+            : "#ee2222"
           : isFocused
-          ? "white"
-          : "#bbbbbb"
+          ? "#f2f2f2"
+          : "#dddddd"
       }
     >
-      &nbsp;{getCardName(card)}&nbsp;
+      &nbsp;
+      <Text
+        // backgroundColor={isFocused ? "#444444" : undefined}
+        underline={isFocused}
+      >
+        {getCardName(card)}
+      </Text>
+      &nbsp;
     </Text>
   );
 };
 
-const colors = ["#332800", "#003333", "#330033"];
+const colors = ["#241808", "#081d1d", "#1d081d"];
 export const Meld = ({
   children,
   colorIndex,
@@ -53,13 +60,9 @@ export const Meld = ({
   );
 };
 
-export const PlayerHand = ({
-  hand,
-  playerIndex,
-}: {
-  hand: Hand;
-  playerIndex: number;
-}) => {
+export const PlayerHand = () => {
+  const { game } = useGame();
+  const hand = game.hands[0];
   const melds = [...hand.melds];
   if (hand.deadwood.length) {
     melds.unshift(hand.deadwood);
@@ -67,7 +70,7 @@ export const PlayerHand = ({
   return (
     <Box borderStyle="round" width="100%" flexDirection="column" minHeight={5}>
       <Box justifyContent="space-between" paddingBottom={1}>
-        <Player playerIndex={playerIndex} />
+        <Player playerIndex={0} />
       </Box>
       <Box>
         {melds.length > 0 ? (

@@ -6,6 +6,7 @@ export type Ordered = { turn: number; player: PlayerIndex };
 export type DrawAction = {
   type: "draw";
   from: "discard" | "stock" | "pass";
+  card?: Card;
 } & Ordered;
 export type DiscardAction = {
   type: "discard";

@@ -11,7 +11,7 @@ export function MultiHandDisplay() {
       <HandComponent
         hand={game.hands[1]}
         playerIndex={1}
-        hidden={game.outcome ? false : true}
+        hidden={game.outcome ? false : false}
       />
     </Box>
   );

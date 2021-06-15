@@ -1,6 +1,30 @@
+import { useInput } from "ink";
 import React, { createContext, ReactNode, useContext, useState } from "react";
 import { Card } from "../cards";
 import { Game } from "../game";
+
+const configContext = createContext<{ cheatMode: boolean }>({
+  cheatMode: false,
+});
+
+export const ConfigProvider = ({ children }: { children: ReactNode }) => {
+  const [cheatMode, setCheatMode] = useState(false);
+  useInput((input, key) => {
+    if (key.ctrl && input === "u") {
+      setCheatMode(!cheatMode);
+    }
+  });
+
+  return (
+    <configContext.Provider value={{ cheatMode }}>
+      {children}
+    </configContext.Provider>
+  );
+};
+
+export const useConfig = () => {
+  return useContext(configContext);
+};
 
 // @ts-expect-error Allow erroneous default
 const gameContext = createContext<{ game: Game; newGame: () => void }>(null);

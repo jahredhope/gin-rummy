@@ -5,15 +5,17 @@ import { getScore } from "./decks";
 const getLast = <T>(arr: T[]): T => arr[arr.length - 1];
 
 export function takeDrawTurn(state: TurnState): DrawAction {
-  const hand = new Hand(state.hand);
+  const hand = new Hand([...state.hand]);
   const scoreWithout = hand.score;
   hand.addCard(getLast(state.discard));
   hand.discard(hand.deadwood.length - 1);
   const scoreWithDiscard = hand.score;
-  const from =
-    state.stockAllowed && scoreWithout <= scoreWithDiscard
-      ? "stock"
-      : "discard";
+  let from: "pass" | "stock" | "discard" =
+    scoreWithout <= scoreWithDiscard ? "stock" : "discard";
+  if (from === "stock" && !state.stockAllowed) {
+    from = "pass";
+  }
+
   const action: DrawAction = {
     type: "draw",
     from,
