@@ -111,7 +111,7 @@ export function InputSection({ forceRender }: { forceRender: () => void }) {
               }
             }
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error("Invalid input:", error.message);
         }
         forceRender();
